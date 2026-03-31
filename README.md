@@ -32,8 +32,6 @@
 
 ### ⌨️ 環境部署證明
 ![Conda Environment Running](./screenshots/cmd_success.png)
-*(註：終端機截圖證明專案於 `GPTSoVits` 虛擬環境啟動，成功調用 Conda 的 `python.exe` 執行 `webui.py`。)*
 
 ### 🖥️ 推理介面截圖
 ![WebUI TTS Inference Page](./screenshots/inference_page.png)
-*(註：此圖展示了 GPT-SoVITS 推理頁面，證明已具備操作此 AI 工具進行語音合成的能力。)*
