@@ -28,4 +28,12 @@
 - **解決方案**：將整個專案環境與當前訓練數據集部署於 **NVMe SSD (C 槽)**，利用固態硬碟高隨機讀取（Random 4K Read）的特性，確保數據吞吐量能精確餵飽 GPU 算力。****
 
 ## 🎧 實作成果
-(這裡可以放一張 WebUI 執行時的截圖，或是描述訓練出的音質效果)
+## 🎧 實作成果 (Results)
+
+### 🖱️ 環境部署與 WebUI 運行證明
+![Conda Environment & WebUI Success](./docs/screenshots/cmd_success.png)
+*(註：終端機截圖證明了專案已於 Conda `GPTSoVits` 虛擬環境中啟動，並成功於本地端 URL `http://0.0.0.0:9874` 運行 WebUI。)*
+
+### 🖥️ WebUI 介面截圖
+![TTS Inference Interface](./docs/screenshots/tts_webui.png)
+*(註：此圖展示了 GPT-SoVITS-TTS 的推理介面，證明用戶具備操作此 AI 工具進行語音合成的能力。)*
