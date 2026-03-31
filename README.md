@@ -34,3 +34,7 @@
 
 ### 🖥️ 推理介面截圖
 ![WebUI TTS Inference Page](./screenshots/inference_page.png)
+### 🔊 音頻 Demo (Audio Samples)
+| 類別 | 試聽連結 (Link) | 技術說明 |
+| :--- | :--- | :--- |
+| **合成結果 (Output)** | [點此試聽](./show/output_demo.wav) | 經過模型微調後的推論成果 (48kHz) |
