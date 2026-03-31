@@ -1,0 +1,2 @@
+cd /d C:\Users\johnl\Desktop\GPT-SoVITS
+"C:\Users\johnl\anaconda3\envs\GPTSoVits\python.exe" webui.py
