@@ -1,36 +1,105 @@
-# GPT-SoVITS 語音克隆實作紀錄
+# GPT-SoVITS v2Pro 個人語音微調實作
 
-## 📌 專案背景 (Project Overview)
-本專案為 AI 語音合成的實作練習，旨在掌握從語音數據清洗、音頻切片到模型微調（Fine-tuning）的完整 Pipeline。
+本專案使用 [GPT-SoVITS](https://github.com/RVC-Boss/GPT-SoVITS) 的 v2Pro 模型，實作從中文語音資料處理、文字標註、特徵提取，到 GPT 與 SoVITS 模型微調的完整流程。
 
-## ⚙️ 開發環境 (Environment)
-針對本地硬體進行了環境優化與效能測試：
-- **GPU**: NVIDIA GeForce RTX 4060 Ti (16GB VRAM)
-- **Storage**: C 槽 SSD (優化 I/O 讀取效率，避免訓練時的 Bottleneck)
-- **Framework**: PyTorch / CUDA 12.x
+> 本專案重點是驗證本地端語音微調流程，不代表已達到商業級語音克隆品質。
 
-## 🛠️ 我的實作內容 (My Contribution)
-- **數據集準備**：採集並處理了約 [填入時間，例如：30 分鐘] 的原始語音資料。
-- **資料清洗**：使用 UVR5 進行人聲分離，並透過內建腳本完成去噪與 10s 以內的音頻自動切片。
-- **模型訓練**：在本地端完成訓練，並針對 [某個音色] 進行了參數調優。
+## 專案流程
 
-## 📊 遇到的問題與解決方案 (Technical Challenges)
-- **問題 A**：初始環境路徑報錯或 Cuda 版本衝突
-- **解決方案**：透過 Conda 重新建置獨立環境，並手動指定 Path 位址
-- **B. Git 指令環境變數失效 (Command Not Found)**
-- **問題描述**：在執行 `git init` 初始化專案版本控制時，系統噴出 `'git' 不是內部或外部命令` 錯誤，導致無法與 GitHub 連動。
-- **技術分析**：此為典型的 **Environment Variables (PATH)** 映射失效。作業系統在執行 Shell 指令時，無法在目前的搜尋路徑中找到 Git 的二進位執行檔。
-- **解決方案**：重新安裝 Git 核心套件並手動確認 Path 映射路徑，隨後**重啟終端機執行環境**（重新載入 Context），成功恢復指令調用功能。
+1. 錄製中文語音
+2. 依停頓將音訊切成短片段
+3. 使用語音辨識產生初步文字標註
+4. 建立文字、音素與語意特徵
+5. 分別微調 GPT 與 SoVITS 模型
+6. 使用參考音訊與輸入文字進行語音合成
 
-### **C. 訓練過程中的 I/O 瓶頸優化 (Hardware Performance)**
-- **問題描述**：GPT-SoVITS 在訓練期間需要頻繁隨機讀取數千個小體積音訊切片（Audio Slices），產生極大量的碎檔 I/O 請求。
-- **技術分析**：若將專案放在機械硬碟 (HDD)，磁頭的物理尋道時間會造成嚴重的 **IO Wait**，導致 RTX 4060 Ti 顯卡運算效能被硬碟速度拖累，形成系統瓶頸。
-- **解決方案**：將整個專案環境與當前訓練數據集部署於 **NVMe SSD (C 槽)**，利用固態硬碟高隨機讀取（Random 4K Read）的特性，確保數據吞吐量能精確餵飽 GPU 算力。****
+## 實驗資料
 
-## 🎧 實作成果 (Results)
+本專案共進行兩次個人語音微調實驗：
 
-### ⌨️ 環境部署證明
-![Conda Environment Running](./screenshots/cmd_success.png)
+| 實驗 | 有效片段 | 總長度 | 說明 |
+| --- | ---: | ---: | --- |
+| JJY_00 | 8 段 | 約 43.7 秒 | 第一版，小型流程驗證 |
+| JJY_01 | 20 段 | 約 129 秒 | 第二版，增加語音與句型數量 |
 
-### 🖥️ 推理介面截圖
-![WebUI TTS Inference Page](./screenshots/inference_page.png)
+兩組資料量都偏少，因此主要用於確認訓練與推論流程能正常完成，不足以證明模型在不同語氣、長句與複雜文本下皆能穩定還原音色。
+
+## 訓練設定
+
+### GPT 模型
+
+| 實驗 | 設定 epochs | Batch size | 精度 | 輸出權重 |
+| --- | ---: | ---: | --- | --- |
+| JJY_00 | 15 | 8 | 16-bit mixed precision | Epoch 5、10、15 |
+| JJY_01 | 16 | 8 | 16-bit mixed precision | Epoch 5、10、15 |
+
+共同設定：
+
+- 預訓練模型：`s1v2.ckpt`
+- Optimizer learning rate：`0.01`
+- Warmup steps：`2000`
+- Random seed：`1234`
+
+### SoVITS 模型
+
+| 實驗 | 訓練 epochs | Batch size | Learning rate | 輸出權重 |
+| --- | ---: | ---: | ---: | --- |
+| JJY_00 | 18 | 8 | 0.0001 | Epoch 4、8、12、16 |
+| JJY_01 | 12 | 8 | 0.0001 | Epoch 4、8、12 |
+
+共同設定：
+
+- 模型版本：v2Pro
+- 訓練取樣率：32 kHz
+- FP16：啟用
+- Random seed：`1234`
+- 預訓練模型：`s2Gv2Pro.pth`、`s2Dv2Pro.pth`
+
+## 實作成果
+
+本專案已完成：
+
+- 中文語音切片與文字標註
+- GPT 與 SoVITS 模型微調
+- 多個 epoch checkpoint 輸出
+- 本地 WebUI 推論
+- 語音合成 Demo
+
+### 語音 Demo
+
+[下載或試聽合成結果](./show/output_demo.wav)
+
+Demo 格式：
+
+- 單聲道 WAV
+- 32 kHz
+- 約 1 分 50 秒
+
+### WebUI
+
+![GPT-SoVITS WebUI](./screenshots/webui_main.png)
+
+### 執行畫面
+
+![GPT-SoVITS command line](./screenshots/cmd_success.png)
+
+## 執行環境
+
+- GPU：NVIDIA GeForce RTX 4060 Ti 16GB
+- Python：3.9.25
+- PyTorch：2.7.1+cu118
+- Gradio：4.44.1
+- 作業系統：Windows
+
+## 專案限制
+
+- 訓練資料只有約 44 秒與 129 秒，音色與語氣覆蓋有限。
+- 尚未使用 MOS、說話者相似度或固定測試文本進行客觀評估。
+- 尚未系統化比較所有 checkpoint，因此不宣稱某一組權重是最佳模型。
+- 模型權重與原始錄音涉及容量及個人聲音隱私，未包含於此 GitHub 儲存庫。
+- 本專案目前為本地端實驗，沒有提供公開的線上推論服務。
+- 專案包含上游 GPT-SoVITS 原始碼；個人工作主要集中於環境建置、資料處理、模型微調、測試與成果整理。
+
+## 致謝與授權
+
+本專案基於 [RVC-Boss/GPT-SoVITS](https://github.com/RVC-Boss/GPT-SoVITS) 實作，原始程式碼版權與授權條款依上游專案規定。
